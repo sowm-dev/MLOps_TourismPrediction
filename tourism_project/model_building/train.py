@@ -21,12 +21,12 @@ ytrain = pd.read_csv("ytrain.csv").squeeze()
 ytest  = pd.read_csv("ytest.csv").squeeze()
 
 # One-hot encode 'Type' and scale numeric features
-numeric_features = ["CustomerID", "Age",
+numeric_features = ["Age",
     "CityTier","NumberOfPersonVisiting",
     "PreferredPropertyStar", "NumberOfTrips", "Passport",
     "OwnCar", "NumberOfChildrenVisiting","MonthlyIncome",
     "PitchSatisfactionScore","NumberOfFollowups", "DurationOfPitch"]
-                     
+
 categorical_features = ["TypeofContact","Occupation","Gender","ProductPitched","MaritalStatus","Designation"]
 
 # Set the class weight to handle class imbalance
@@ -52,7 +52,6 @@ param_grid = {
 
 # Model pipeline
 model_pipeline = make_pipeline(preprocessor, xgb_model)
-
 # Start MLflow run
 with mlflow.start_run():
     # Hyperparameter tuning
