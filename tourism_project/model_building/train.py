@@ -21,11 +21,24 @@ ytrain = pd.read_csv("ytrain.csv").squeeze()
 ytest  = pd.read_csv("ytest.csv").squeeze()
 
 # One-hot encode 'Type' and scale numeric features
-numeric_features = ["Age",
-    "CityTier","NumberOfPersonVisiting",
-    "PreferredPropertyStar", "NumberOfTrips", "Passport",
-    "OwnCar", "NumberOfChildrenVisiting","MonthlyIncome",
-    "PitchSatisfactionScore","NumberOfFollowups", "DurationOfPitch"]
+numeric_features = [
+    "Age",
+    "CityTier",
+    "NumberOfPersonVisiting",
+    "PreferredPropertyStar",
+    "NumberOfTrips",
+    "Passport",
+    "OwnCar",
+    "NumberOfChildrenVisiting",
+    "MonthlyIncome",
+    "PitchSatisfactionScore",
+    "NumberOfFollowups",
+    "DurationOfPitch",
+    "FamilySize",
+    "IncomePerPerson",
+    "FrequentTraveller",
+    "InternationalTraveller"
+]
 
 categorical_features = ["TypeofContact","Occupation","Gender","ProductPitched","MaritalStatus","Designation"]
 
@@ -34,9 +47,24 @@ class_weight = ytrain.value_counts()[0] / ytrain.value_counts()[1]
 class_weight
 
 # Define the preprocessing steps
+# preprocessor = make_column_transformer(
+#     (StandardScaler(), numeric_features),
+#     (OneHotEncoder(handle_unknown="ignore"), categorical_features)
+# )
+
+from sklearn.pipeline import Pipeline
+from sklearn.impute import SimpleImputer
+numeric_transformer = Pipeline([
+    ("imputer", SimpleImputer(strategy="median")),
+    ("scaler", StandardScaler())
+])
+categorical_transformer = Pipeline([
+    ("imputer", SimpleImputer(strategy="most_frequent")),
+    ("encoder", OneHotEncoder(handle_unknown="ignore"))
+])
 preprocessor = make_column_transformer(
-    (StandardScaler(), numeric_features),
-    (OneHotEncoder(handle_unknown="ignore"), categorical_features)
+    (numeric_transformer, numeric_features),
+    (categorical_transformer, categorical_features)
 )
 
 # Define base XGBoost model
@@ -104,7 +132,7 @@ with mlflow.start_run():
 
     # Save next to app.py so the Streamlit app can load it directly, and log
     # it as an MLflow artifact for traceability
-    model_path = "tourism_project/deployment/best_machine_failure_model_v1.joblib"
+    model_path = "tourism_project/deployment/best_model_v1.joblib"
     joblib.dump(best_model, model_path)
     mlflow.log_artifact(model_path, artifact_path="model")
     print(f"Model saved to {model_path}")
