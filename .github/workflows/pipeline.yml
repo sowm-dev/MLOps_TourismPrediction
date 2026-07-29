@@ -1,3 +1,4 @@
+
 name: Tourism Project Pipeline
 
 on:
@@ -15,11 +16,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
+      - name: Checkout Repository
+        uses: actions/checkout@v4
 
-      - uses: actions/setup-python@v5
+      - name: Setup Python
+        uses: actions/setup-python@v5
         with:
           python-version: "3.11"
 
@@ -39,15 +40,14 @@ jobs:
 
   data-prep:
     needs: register-dataset
-
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
+      - name: Checkout Repository
+        uses: actions/checkout@v4
 
-      - uses: actions/setup-python@v5
+      - name: Setup Python
+        uses: actions/setup-python@v5
         with:
           python-version: "3.11"
 
@@ -71,16 +71,14 @@ jobs:
 
   model-training:
     needs: data-prep
-
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          persist-credentials: true
+      - name: Checkout Repository
+        uses: actions/checkout@v4
 
-      - uses: actions/setup-python@v5
+      - name: Setup Python
+        uses: actions/setup-python@v5
         with:
           python-version: "3.11"
 
@@ -99,20 +97,28 @@ jobs:
           nohup mlflow ui --host 0.0.0.0 --port 5000 &
           sleep 5
 
-      - name: Model Building
+      - name: Train Model
         run: python tourism_project/model_building/train.py
 
-      - name: Commit Trained Model
+      - name: Check Model
+        run: ls -l tourism_project/deployment/
+
+      - name: Commit Model
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           git config --global user.name "github-actions"
           git config --global user.email "github-actions@github.com"
 
           git add tourism_project/deployment/best_model_v1.joblib
 
-          git diff --cached --quiet && echo "No changes to commit" && exit 0
+          if git diff --cached --quiet; then
+            echo "No model changes."
+            exit 0
+          fi
 
-          git commit -m "Add trained model [skip ci]"
+          git commit -m "Update trained model [skip ci]"
 
           git pull --rebase origin main
 
-          git push origin HEAD:main
+          git push origin main
