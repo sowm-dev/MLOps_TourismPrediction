@@ -74,6 +74,6 @@ jobs:
         run: |
           git config user.name "sowm-dev"
           git config user.email "sowmyaravichandran79@gmail.com"
-          git add tourism_project/deployment/best_machine_failure_model_v1.joblib
+          git add tourism_project/deployment/best_model_v1.joblib
           git commit -m "Add trained model [skip ci]" || echo "No changes to commit"
           git push
